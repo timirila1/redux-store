@@ -2,9 +2,9 @@ import { IAction } from './action.interface';
 import { IState } from './state.interface';
 
 export class Store {
-    private subscribers: Function[];
+    private subscribers: Function[] = [];
     private reducers: { [key: string]: Function };
-    private state: IState;
+    private state: IState = {};
 
     constructor(reducers = {}, initialState = {}) {
         this.reducers = reducers;
@@ -17,6 +17,19 @@ export class Store {
 
     public dispatch(action: IAction) {
         this.state = this.reduce(this.state, action);
+        this.notify();
+    }
+
+    public subscribe(fn) {
+        this.subscribers = [...this.subscribers, fn];
+        this.notify();
+        return () => {
+            this.subscribers = this.subscribers.filter(sub => sub !== fn);
+        };
+    }
+
+    private notify() {
+        this.subscribers.forEach(fn => fn(this.value));
     }
 
     private reduce(state, action) {
